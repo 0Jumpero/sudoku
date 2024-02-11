@@ -547,7 +547,7 @@ function activeClick(area, elem) {
 
     if(elem.id == 'restart') {
       if(lock) while(history.length) activeClick('option', { id: 'reverse' });
-      else location.reload();
+      else reload();
     }
   }
 
@@ -701,8 +701,7 @@ function switchLocks(state) {
     for(let c = 0; c < 9; c++)
       if(sudoku[r][c].value) {
         sudoku[r][c].lock = state;
-        /*if(!state) sudoku[r][c].DOM.firstChild.classList.add('locked');
-        else */sudoku[r][c].DOM.firstChild.classList.remove('locked', 'unlocked');
+        sudoku[r][c].DOM.firstChild.classList.remove('locked', 'unlocked');
       }
 }
 
@@ -748,7 +747,7 @@ function checkEnd() {
     let restart = document.createElement('div');
     restart.className = 'restart';
     restart.innerText = '⟳';
-    restart.onclick = () => location.reload();
+    restart.onclick = () => reload(true);
 
     switchLocks(true);
     sudoku.DOM.ontransitionend = function () {
@@ -766,5 +765,38 @@ function checkEnd() {
     digits.classList.add('end');
     options.ontransitionend = function () { this.remove(); };
     options.classList.add('end');
+  }
+}
+
+function reload(total = false) {
+  removeActive();
+  active = null;
+  currentDigit = null;
+  currentHighlight = null;
+  selection = 0;
+  pencil = false;
+  lock = false;
+  history = [];
+  totals = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+  for(let r = 0; r < 9; r++)
+    for(let c = 0; c < 9; c++) {
+      sudoku[r][c].value = null;
+      sudoku[r][c].DOM.innerHTML = ""
+      sudoku[r][c].lock = false;
+    }
+
+
+  if(total) {
+    for(let e of sudoku.DOM.querySelectorAll('.sepV, .sepH')) {
+      e.style.animationDelay = '';
+      e.classList.remove('end');
+    }
+
+    document.getElementsByClassName('restart')[0].remove();
+    document.body.classList.remove('end');
+    digits.classList.remove('end');
+    options.classList.remove('end');
+    document.body.append(digits, options);
   }
 }
