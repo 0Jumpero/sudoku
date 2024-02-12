@@ -1,6 +1,6 @@
 // Register service worker 
 if('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/service-worker.js').then(
+  navigator.serviceWorker.register('./service-worker.js').then(
     (registration) => {
       console.log('Service Worker registered with scope:', registration.scope);
     },
@@ -758,12 +758,21 @@ function checkEnd() {
       }
       document.body.append(restart);
       // After everyting + 10ms
-      setTimeout(() => { restart.classList.add('end'); }, 10);
+      setTimeout(() => {
+        restart.classList.add('end');
+        sudoku.DOM.ontransitionend = "";
+      }, 10);
     };
     document.body.classList.add('end');
-    digits.ontransitionend = function () { this.remove(); };
+    digits.ontransitionend = function () {
+      this.remove();
+      this.ontransitionend = "";
+    };
     digits.classList.add('end');
-    options.ontransitionend = function () { this.remove(); };
+    options.ontransitionend = function () {
+      this.remove();
+      this.ontransitionend = "";
+    };
     options.classList.add('end');
   }
 }
