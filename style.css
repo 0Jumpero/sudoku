@@ -3,6 +3,12 @@
   --accent-faded: rgb(180, 120, 80);
   --base: rgb(50, 50, 50);
   --base-faded: rgb(100, 100, 100);
+  --height: 100%;
+}
+
+html {
+  height: 100%;
+  width: 100%;
 }
 
 body {
@@ -14,23 +20,127 @@ body {
   flex-wrap: wrap;
   align-content: space-between;
   justify-content: center;
-  height: 98vh;
+  width: 100%;
+  height: 100%;
+  margin: 0px;
   overflow: hidden;
   border-top: 0px solid var(--base);
 }
 
+/* Sudoku board */
 .sudoku {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
+  height: 45%;
   transition: all 3.5s;
+  aspect-ratio: 1;
+  border-collapse: collapse;
+  margin: 10px 50%;
 }
 
+/* Sudoku cell divider */
+td {
+  position: relative;
+  width: 10%;
+}
+
+/* Sudoku main lines */
+tr td:nth-child(3),
+tr td:nth-child(6) {
+  border-right: 2px solid var(--accent);
+}
+
+tr:nth-child(3) td,
+tr:nth-child(6) td {
+  border-bottom: 2px solid var(--accent);
+}
+
+/* Sudoku separators verical*/
+.cellBorder:nth-child(3n+1)::after,
+.cellBorder:nth-child(3n+2)::after {
+  content: "";
+  position: absolute;
+  top: 0px;
+  right: -1px;
+  width: 1px;
+  height: 60%;
+  margin: 20% 0;
+  background-color: var(--base-faded);
+  transition: all 3s;
+}
+
+/* While sudoku board is slinding */
+.end .cellBorder:nth-child(3n+1)::after,
+.end .cellBorder:nth-child(3n+2)::after {
+  content: "";
+  position: absolute;
+  top: 0px;
+  right: -1px;
+  width: 1px;
+  height: 60%;
+  margin: 20% 0;
+  background-color: var(--accent) !important;
+}
+
+/* After sudoku slide */
+.cellBorderAnim:nth-child(3n+1)::after,
+.cellBorderAnim:nth-child(3n+2)::after {
+  content: "";
+  position: absolute;
+  top: 0px;
+  right: -1px;
+  width: 1px;
+  height: 60%;
+  margin: 20% 0;
+  animation-name: shimmer;
+  animation-duration: 7s;
+  animation-iteration-count: infinite;
+  background-color: var(--accent);
+}
+
+/* Sudoku separators horizontal */
+tr:nth-child(3n+1) .cellBorder::before,
+tr:nth-child(3n+2) .cellBorder::before {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  width: 60%;
+  height: 1px;
+  margin: 0 20%;
+  background-color: var(--base-faded);
+  transition: all 3s;
+}
+
+/* While sudoku board is slinding */
+.end tr:nth-child(3n+1) .cellBorder::before,
+.end tr:nth-child(3n+2) .cellBorder::before {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  width: 60%;
+  height: 1px;
+  margin: 0 20%;
+  background-color: var(--accent) !important;
+}
+
+/* After sudoku slide */
+tr:nth-child(3n+1) .cellBorderAnim::before,
+tr:nth-child(3n+2) .cellBorderAnim::before {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  width: 60%;
+  height: 1px;
+  margin: 0 20%;
+  animation-name: shimmer;
+  animation-duration: 7s;
+  animation-iteration-count: infinite;
+  background-color: var(--accent)
+}
+
+/* Sudoku cell */
 .cell {
   cursor: pointer;
-  width: 10vw;
-  height: 10vw;
+  width: 100%;
+  aspect-ratio: 1;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -38,15 +148,16 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Digit inside sudoku cell */
 .digit {
   background-color: var(--base-faded);
-  width: 8vw;
-  height: 8vw;
+  width: 80%;
+  height: 80%;
   border-radius: 100%;
-  line-height: 8vw;
   text-align: center;
-  font-size: 6vw;
   color: var(--base);
+  line-height: calc(var(--height) * 3.8 / 100);
+  font-size: calc(var(--height) * 2.7 / 100);
 }
 
 .unlocked {
@@ -54,26 +165,28 @@ body {
   color: white;
 }
 
+/* Pencil digit container inside sudoku cell */
 .pencil {
-  width: 8vw;
-  height: 8vw;
+  width: 80%;
+  height: 80%;
   border-radius: 100%;
-  font-size: 2vw;
+  font-size: calc(var(--height) * 0.9 / 100);
   color: white;
   display: flex;
   flex-wrap: wrap;
   align-content: flex-end;
   justify-content: center;
-  padding: 1vw 0.2vw;
+  padding: 10% 5%;
   box-sizing: border-box;
 }
 
 .pencilDigit {
-  width: 2vw;
-  height: 2vw;
+  width: calc(var(--height) * 0.95 / 100);
+  height: calc(var(--height) * 0.95 / 100);
   text-align: center;
 }
 
+/* Highlight for same digit cells */
 .highlight {
   background-color: var(--accent-faded);
   color: var(--base);
@@ -81,6 +194,7 @@ body {
   animation-duration: 200ms;
 }
 
+/* Active cell or UIdigit */
 .active {
   background-color: var(--accent);
   color: var(--base);
@@ -88,6 +202,7 @@ body {
   animation-duration: 200ms;
 }
 
+/* Pop animation for active */
 @keyframes pop {
   0% {
     scale: 1;
@@ -102,23 +217,27 @@ body {
   }
 }
 
+/* Keypad containter */
 .UIdigits {
   display: flex;
-  width: 80vw;
+  height: 15%;
   align-items: center;
   justify-content: center;
   flex-wrap: wrap;
+  aspect-ratio: 2.6/1;
+  margin: 0 50%;
 }
 
+/* Keypad digits */
 .UIdigit {
-  width: 13vw;
-  height: 13vw;
+  width: 16%;
+  aspect-ratio: 1;
   text-align: center;
   font-weight: bold;
   color: white;
   cursor: pointer;
   position: relative;
-  margin: 1vw;
+  margin: calc(var(--height) * 0.5 / 100);
   border-radius: 100%;
   border: 1px solid var(--base-faded);
   transition: background 0.4s, border 0.4s, color 0.4s;
@@ -126,19 +245,20 @@ body {
 }
 
 .UIdigitID {
-  line-height: 13vw;
-  font-size: 7vw;
+  line-height: calc(var(--height) * 6 / 100);
+  font-size: calc(var(--height) * 3.2 / 100);
 }
 
 .UIdigitCount {
-  font-size: 3vw;
-  line-height: 3vw;
+  line-height: calc(var(--height) * 1.5 / 100);
+  font-size: calc(var(--height) * 1.5 / 100);
   color: var(--base-faded);
   width: 100%;
   position: absolute;
   bottom: 0px;
 }
 
+/* Active UIdigit styles */
 .UIdigitEnabled,
 .UIdigit:active {
   transition: all 0s;
@@ -153,27 +273,30 @@ body {
   transition: all 0s;
 }
 
+/* Options toolbar */
 .UIoptions {
   display: flex;
-  width: 95vw;
   align-items: center;
   justify-content: center;
   flex-wrap: wrap;
+  height: 8%;
+  aspect-ratio: 8/1;
+  margin: 0 50%;
 }
 
 .UIoption {
-  width: 20vw;
-  height: 10vw;
+  width: 14%;
+  aspect-ratio: 2/1;
+  font-size: calc(var(--height) * 3.2 / 100);
+  line-height: calc(var(--height) * 4.5 / 100);
   text-align: center;
-  line-height: 10vw;
   color: white;
-  font-size: 7vw;
   font-weight: bold;
   cursor: pointer;
-  margin: 1vw;
-  border-radius: 10vw;
+  border-radius: 200px;
   border: 1px solid var(--base);
   transition: background 0.4s, border 1s;
+  margin: calc(var(--height) * 1 / 100);
 }
 
 .UIoption:active {
@@ -190,12 +313,13 @@ body {
   color: var(--base-faded);
 }
 
+/* End styling */
 .end .sudoku {
-  margin-top: 25vw;
+  margin-top: calc(var(--height) * 1 / 8);
 }
 
-.UIdigits.end,
-.UIoptions.end {
+.end .UIdigits,
+.end .UIoptions {
   transition: opacity 2s;
   opacity: 0;
 }
@@ -204,19 +328,6 @@ body {
   transition: all 3.5s;
   background-color: var(--base);
   color: white;
-}
-
-.end .sepH,
-.end .sepV {
-  transition: all 3s;
-  background-color: var(--accent);
-}
-
-.end.sepH,
-.end.sepV {
-  animation-name: shimmer;
-  animation-duration: 7s;
-  animation-iteration-count: infinite;
 }
 
 @keyframes shimmer {
@@ -233,19 +344,20 @@ body {
   }
 }
 
+/* Restart button */
 .restart {
-  width: 13vw;
-  height: 13vw;
+  height: 6%;
+  aspect-ratio: 1;
   text-align: center;
-  line-height: 12vw;
-  font-size: 8vw;
+  font-size: calc(var(--height) * 3.7 / 100);
+  line-height: calc(var(--height) * 5.5 / 100);
   font-weight: bold;
   transition: all 2s;
   opacity: 0;
   border: 1px solid var(--base-faded);
   border-radius: 100%;
   color: white;
-  margin-bottom: 10vw;
+  margin-bottom: calc(var(--height) * 1 / 10);
   cursor: pointer;
 }
 
@@ -259,53 +371,4 @@ body {
 .end.restart {
   transition: all 2s;
   opacity: 1;
-}
-
-
-
-.sepV {
-  height: 10vw;
-  width: 1px;
-  background-color: var(--base-faded);
-  border-top: 2vw solid var(--base);
-  border-bottom: 2vw solid var(--base);
-  box-sizing: border-box;
-}
-
-.sepH {
-  height: 1px;
-  width: 10vw;
-  background-color: var(--base-faded);
-  border-left: 2vw solid var(--base);
-  border-right: 2vw solid var(--base);
-  box-sizing: border-box;
-}
-
-.sepC {
-  height: 1px;
-  width: 1px;
-}
-
-.lineV {
-  height: 10vw;
-  width: 2px;
-  background-color: var(--accent);
-}
-
-.lineH {
-  width: 10vw;
-  height: 2px;
-  background-color: var(--accent);
-}
-
-.lineCV {
-  height: 1px;
-  width: 2px;
-  background-color: var(--accent);
-}
-
-.lineCH {
-  height: 2px;
-  width: 1px;
-  background-color: var(--accent);
 }

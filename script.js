@@ -12,28 +12,32 @@ if('serviceWorker' in navigator) {
 
 
 // Global variables
-let active = null;
-let currentDigit = null;
-let currentHighlight = null;
-let selection = 0;
-let pencil = false;
-let lock = false;
-let history = [];
-let totals = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+let active = null; // current active element
+let currentDigit = null; // current selected digit
+let currentHighlight = null; // current digit highlight
+let selection = 0;  // click type, 0 - nothing active, 1 - active cell, 2 - active UIdigit
+let pencil = false; // pencil mode toggled
+let lock = false; // lock mode toggled
+let history = []; // move history
+let totals = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]; // counter for each digit inputed
+let addedStyles = []; // additional style classes for end screen
 
 
 // Sudoku Builder
 
 let sudoku = [];
-sudoku.DOM = document.createElement('div');
+sudoku.DOM = document.createElement('table');
 sudoku.DOM.className = 'sudoku';
 for(let r = 0; r < 9; r++) {
 
   sudoku[r] = [];
+  sudoku[r].DOM = sudoku.DOM.insertRow();
 
   for(let c = 0; c < 9; c++) {
+    let inner = sudoku[r].DOM.insertCell();
+    inner.classList.add('cellBorder');
     sudoku[r][c] = {
-      'DOM': document.createElement('div'),
+      'DOM': inner.appendChild(document.createElement("div")),
       'value': null,
       'pencil': [],
       'class': 'cell',
@@ -43,64 +47,18 @@ for(let r = 0; r < 9; r++) {
     }
     sudoku[r][c].DOM.className = 'cell';
     sudoku[r][c].DOM.onclick = () => { activeClick('cell', sudoku[r][c]) };
-    sudoku.DOM.appendChild(sudoku[r][c].DOM);
-
-    // Separator Vertical
-    if(c != 2 && c != 5 && c != 8) {
-      let separator = document.createElement('div');
-      separator.className = 'sepV';
-      sudoku.DOM.appendChild(separator);
-    }
-    // Line Verical
-    if(c == 2 || c == 5) {
-      let separator = document.createElement('div');
-      separator.className = 'lineV';
-      sudoku.DOM.appendChild(separator);
-    }
   }
-
-  // Separator Horizontal
-  if(r != 2 && r != 5 && r != 8) {
-    for(let i = 0; i < 9; i++) {
-      // Line Spacer Horizontal
-      if(i == 3 || i == 6) {
-        let spacer = document.createElement('div');
-        spacer.className = 'lineCV';
-        sudoku.DOM.appendChild(spacer);
-      }
-      let separator = document.createElement('div');
-      separator.className = 'sepH';
-      sudoku.DOM.appendChild(separator);
-      // Separator Spacer Horizontal
-      if(i != 2 && i != 5 && i != 8) {
-        let spacer = document.createElement('div');
-        spacer.className = 'sepC';
-        sudoku.DOM.appendChild(spacer);
-      }
-
-    }
-  }
-  // Line Horizontal
-  if(r == 2 || r == 5) {
-    for(let i = 0; i < 9; i++) {
-      let separator = document.createElement('div');
-      separator.className = 'lineH';
-      sudoku.DOM.appendChild(separator);
-      // Line Spacer HOrizontal
-      if(i < 8) {
-        let spacer = document.createElement('div');
-        spacer.className = 'lineCH';
-        sudoku.DOM.appendChild(spacer);
-      }
-      if(i == 2 || i == 5) {
-        let spacer = document.createElement('div');
-        spacer.className = 'lineCH';
-        sudoku.DOM.appendChild(spacer);
-      }
-    }
-  }
-
 }
+
+// Function to update elements sizes using --height variable (here before adding any elements)
+updateSizes = () => {
+  let height = window.innerHeight;
+  let root = document.querySelector(':root');
+  root.style.setProperty('--height', `${Math.floor(height)}px`);
+}
+updateSizes();
+document.body.onresize = () => { updateSizes() };
+
 document.body.appendChild(sudoku.DOM);
 
 
@@ -263,7 +221,7 @@ function activeClick(area, elem) {
           elem.DOM.firstChild.classList.remove('highlight');
         }
 
-        // If cell is empty or has digit or has other pencil digits
+        // If cell is empty or has digit or has other pencil digits input pencil digit
         else {
           // History (overwrite cell with pencil digit)
           history.push({
@@ -296,7 +254,6 @@ function activeClick(area, elem) {
         }
 
       } else {
-        // add active anim
         // If cell current value is the same as the one being inputed then clear cell
         if(elem.value == currentDigit) {
           // History (remove digit)
@@ -396,7 +353,7 @@ function activeClick(area, elem) {
           active.pencil = active.pencil.filter(d => d != currentDigit);
         }
 
-        // If cell is empty or has digit or has other pencil digits
+        // If cell is empty or has digit or has other pencil digits input pencil digit
         else {
           // History (overwrite with pencil digit)
           history.push({
@@ -529,8 +486,6 @@ function activeClick(area, elem) {
 
         // If prev was auto removed remove next one from history
       } while(prev.auto);
-
-      //if(currentHighlight) setHighlight(currentHighlight);
     }
 
     if(elem.id == 'lock') {
@@ -561,6 +516,19 @@ function activeClick(area, elem) {
   checkEnd();
 
 }
+
+// Keyboard integration
+function keyboardPress(e) {
+  let key = e.key;
+  if(!isNaN(key)) {
+    let elem = null;
+    if(key > 0) elem = digits.childNodes[key - 1];
+    else elem = digits.childNodes[9];
+    let area = "digit";
+    activeClick(area, elem);
+  }
+}
+document.addEventListener('keypress', keyboardPress);
 
 function removeActive() {
   if(!active) return;
@@ -595,6 +563,7 @@ function removeHighlight() {
       if(sudoku[r][c].DOM.firstChild) sudoku[r][c].DOM.firstChild.classList.remove('highlight');
 }
 
+// Clearing rows, columns and nonets
 function clearPencil(cell) {
   if(cell.value == 0) return;
 
@@ -696,6 +665,7 @@ function clearPencil(cell) {
   }
 }
 
+// Locking inputed digits
 function switchLocks(state) {
   for(let r = 0; r < 9; r++)
     for(let c = 0; c < 9; c++)
@@ -705,12 +675,14 @@ function switchLocks(state) {
       }
 }
 
+// Update keypad digits counters
 function updateCounters() {
   for(let digit of document.querySelectorAll('.UIdigitCount')) {
     digit.innerText = 9 - totals[digit.parentElement.id];
   }
 }
 
+// End condition
 function checkEnd() {
   let bingo = [];
 
@@ -744,36 +716,7 @@ function checkEnd() {
     }
 
     // If all checks passed present end screen
-    let restart = document.createElement('div');
-    restart.className = 'restart';
-    restart.innerText = '⟳';
-    restart.onclick = () => reload(true);
-
-    switchLocks(true);
-    sudoku.DOM.ontransitionend = function () {
-      // After sudoku board slide
-      for(let e of sudoku.DOM.querySelectorAll('.sepV, .sepH')) {
-        e.style.animationDelay = `${Math.random() * 7}s`;
-        e.classList.add('end');
-      }
-      document.body.append(restart);
-      // After everyting + 10ms
-      setTimeout(() => {
-        restart.classList.add('end');
-        sudoku.DOM.ontransitionend = "";
-      }, 10);
-    };
-    document.body.classList.add('end');
-    digits.ontransitionend = function () {
-      this.remove();
-      this.ontransitionend = "";
-    };
-    digits.classList.add('end');
-    options.ontransitionend = function () {
-      this.remove();
-      this.ontransitionend = "";
-    };
-    options.classList.add('end');
+    end();
   }
 }
 
@@ -795,17 +738,60 @@ function reload(total = false) {
       sudoku[r][c].lock = false;
     }
 
-
   if(total) {
-    for(let e of sudoku.DOM.querySelectorAll('.sepV, .sepH')) {
-      e.style.animationDelay = '';
-      e.classList.remove('end');
+    for(let e of sudoku.DOM.querySelectorAll('td')) {
+      e.className = 'cellBorder';
     }
 
     document.getElementsByClassName('restart')[0].remove();
     document.body.classList.remove('end');
-    digits.classList.remove('end');
-    options.classList.remove('end');
+    optionLock.classList.remove('UIoptionEnabled');
     document.body.append(digits, options);
   }
+}
+
+// End screen
+function end() {
+  let restart = document.createElement('div');
+  restart.className = 'restart';
+  restart.innerText = '⟳';
+  restart.onclick = () => reload(true);
+
+  switchLocks(true);
+  sudoku.DOM.ontransitionend = function () {
+    // After sudoku board slide
+    let id = 0;
+    for(let e of sudoku.DOM.querySelectorAll('td')) {
+
+      // If additional styles not defined add them
+      if(addedStyles.length < 81) {
+        addedStyles.push(document.createElement('style')) - 1;
+        addedStyles[id].type = 'text/css';
+        addedStyles[id].innerHTML = `
+        .animDelay${id}::before { animation-delay: ${Math.random() * 7}s; }
+        .animDelay${id}::after { animation-delay: ${Math.random() * 7}s; }
+      `;
+        document.head.append(addedStyles[id]);
+      }
+      e.classList.add(`animDelay${id}`, 'cellBorderAnim');
+      e.classList.remove('cellBorder');
+      id++;
+    }
+    document.body.append(restart);
+    // After everyting + 10ms
+    setTimeout(() => {
+      restart.classList.add('end');
+      sudoku.DOM.ontransitionend = "";
+    }, 10);
+  };
+  // Before sudoku board slide
+  digits.ontransitionend = function () {
+    this.remove();
+    this.ontransitionend = "";
+  };
+  options.ontransitionend = function () {
+    this.remove();
+    this.ontransitionend = "";
+  };
+  document.body.classList.add('end');
 }
