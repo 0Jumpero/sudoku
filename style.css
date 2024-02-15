@@ -115,20 +115,19 @@ body {
   height: 13vw;
   text-align: center;
   font-weight: bold;
+  color: white;
   cursor: pointer;
   position: relative;
   margin: 1vw;
   border-radius: 100%;
   border: 1px solid var(--base-faded);
-  transition: background 0.4s, border 1s, color 5s;
+  transition: background 0.4s, border 0.4s, color 0.4s;
   -webkit-tap-highlight-color: transparent;
 }
 
 .UIdigitID {
   line-height: 13vw;
   font-size: 7vw;
-  color: white;
-  transition: color 0.4s;
 }
 
 .UIdigitCount {
@@ -138,10 +137,10 @@ body {
   width: 100%;
   position: absolute;
   bottom: 0px;
-  transition: color 0.4s;
 }
 
-.UIdigitEnabled {
+.UIdigitEnabled,
+.UIdigit:active {
   transition: all 0s;
   background-color: var(--accent);
   border-color: var(--accent);
