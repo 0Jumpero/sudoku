@@ -667,6 +667,10 @@ function clearPencil(cell) {
 
 // Locking inputed digits
 function switchLocks(state) {
+  if(selection == 1) {
+    removeActive();
+    selection = 0;
+  }
   for(let r = 0; r < 9; r++)
     for(let c = 0; c < 9; c++)
       if(sudoku[r][c].value) {
