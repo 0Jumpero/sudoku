@@ -1,3 +1,7 @@
+/* 
+Next update: timer
+*/
+
 // Register service worker 
 if('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./service-worker.js').then(
@@ -106,6 +110,26 @@ updateCounters();
 
 // UI Builder
 
+// Additional options
+let addons = document.createElement('div');
+addons.className = 'UIaddons';
+
+let optionPuzzle = document.createElement('div');
+optionPuzzle.className = 'UIoption';
+optionPuzzle.id = 'puzzle';
+optionPuzzle.innerText = '⚄';
+optionPuzzle.onclick = () => { activeClick('option', optionPuzzle); };
+
+let addonsToggle = document.createElement('div');
+addonsToggle.className = 'UItoggle';
+addonsToggle.id = 'toggle';
+addonsToggle.innerText = '△';
+addonsToggle.onclick = () => { activeClick('option', addonsToggle) };
+
+addons.append(addonsToggle, optionPuzzle);
+document.body.appendChild(addons);
+
+// Main options
 let options = document.createElement('div');
 options.className = 'UIoptions';
 
@@ -371,6 +395,7 @@ function activeClick(area, elem) {
         // Update cell
         active.DOM.firstChild.innerText = '';
         active.DOM.firstChild.className = 'pencil active';
+        replayAnim(active.DOM.firstChild);
         for(let d of active.pencil) {
           let pencilDigit = document.createElement('div');
           pencilDigit.className = 'pencilDigit';
@@ -405,6 +430,7 @@ function activeClick(area, elem) {
           active.DOM.firstChild.className = (lock) ? 'digit unlocked active' : 'digit active';
           active.DOM.firstChild.innerText = active.value = currentDigit;
           active.pencil = [];
+          replayAnim(active.DOM.firstChild);
           clearPencil(active);
           setHighlight(currentDigit);
         }
@@ -489,20 +515,71 @@ function activeClick(area, elem) {
     }
 
     if(elem.id == 'lock') {
-      if(lock) {
-        switchLocks(false);
-        elem.classList.remove('UIoptionEnabled');
-      } else {
-        switchLocks(true);
-        elem.classList.add('UIoptionEnabled');
-      }
-      lock = !lock;
+      if(lock) switchLocks(false);
+      else switchLocks(true);
       history = [];
     }
 
     if(elem.id == 'restart') {
-      if(lock) while(history.length) activeClick('option', { id: 'reverse' });
-      else reload();
+      let overlay = document.createElement('div');
+      overlay.classList.add('overlay');
+      let dialog = document.createElement('div');
+      dialog.classList.add('dialog');
+      let dialogText = document.createElement('div');
+      dialogText.classList.add('dialogText');
+      dialogText.innerText = 'Are you sure you want to restart?';
+      let dialogYes = document.createElement('div');
+      dialogYes.classList.add('dialogButton');
+      dialogYes.innerText = 'YES';
+      dialogYes.onclick = () => {
+        if(lock) while(history.length) activeClick('option', { id: 'reverse' });
+        else reload();
+        overlay.remove();
+      };
+      let dialogNo = document.createElement('div');
+      dialogNo.classList.add('dialogButton');
+      dialogNo.innerText = 'NO';
+      dialogNo.onclick = () => { overlay.remove(); };
+
+      dialog.append(dialogText, dialogNo, dialogYes);
+      overlay.append(dialog);
+      document.body.append(overlay);
+    }
+
+    if(elem.id == 'toggle') {
+      if(elem.parentElement.classList.contains('expanded')) {
+        elem.parentElement.classList.remove('expanded');
+        elem.innerText = '△';
+      } else {
+        elem.parentElement.classList.add('expanded');
+        elem.innerText = '▽';
+      }
+    }
+
+    if(elem.id == 'puzzle') {
+      let overlay = document.createElement('div');
+      overlay.classList.add('overlay');
+      let dialog = document.createElement('div');
+      dialog.classList.add('dialog');
+      let dialogText = document.createElement('div');
+      dialogText.classList.add('dialogText');
+      dialogText.innerText = 'Generate a puzzle. \n Select difficulty:';
+      let dialogEasy = document.createElement('div');
+      dialogEasy.classList.add('dialogButton');
+      dialogEasy.innerText = 'Easy';
+      dialogEasy.onclick = () => { generatePuzzle('Easy', overlay); };
+      let dialogMid = document.createElement('div');
+      dialogMid.classList.add('dialogButton');
+      dialogMid.innerText = 'Medium';
+      dialogMid.onclick = () => { generatePuzzle('Medium', overlay); };
+      let dialogHard = document.createElement('div');
+      dialogHard.classList.add('dialogButton');
+      dialogHard.innerText = 'Hard';
+      dialogHard.onclick = () => { generatePuzzle('Hard', overlay); };
+
+      dialog.append(dialogText, dialogEasy, dialogMid, dialogHard);
+      overlay.append(dialog);
+      document.body.append(overlay);
     }
   }
 
@@ -529,6 +606,37 @@ function keyboardPress(e) {
   }
 }
 document.addEventListener('keypress', keyboardPress);
+
+// Generating puzzle
+async function generatePuzzle(diff, overlay) {
+  let text = overlay.firstChild.firstChild;
+  text.innerText = 'Loading...';
+  overlay.firstChild.innerHTML = '';
+  overlay.firstChild.append(text);
+
+  try {
+    let collection = await fetch('https://sudoku-api.vercel.app/api/dosuku?query={newboard(limit:20){grids{value,difficulty}}}').then((res) => res.json()).then((data) => data.newboard.grids);
+    reload();
+    for(let grid of collection) if(grid.difficulty == diff) {
+      for(let r = 0; r < 9; r++) for(let c = 0; c < 9; c++) {
+        if(grid.value[r][c] == 0) continue;
+        let digit = document.createElement('div');
+        digit.className = 'digit';
+        sudoku[r][c].DOM.appendChild(digit);
+        sudoku[r][c].DOM.firstChild.innerText = sudoku[r][c].value = grid.value[r][c];
+      }
+      switchLocks(true);
+      overlay.remove();
+      activeClick('option', addonsToggle);
+      return;
+    }
+    generatePuzzle(diff, overlay);
+    return;
+  } catch(err) { };
+
+  text.innerText = 'Something went wrong.\nTry again';
+  setTimeout(() => overlay.remove(), 2000);
+}
 
 function removeActive() {
   if(!active) return;
@@ -561,6 +669,12 @@ function removeHighlight() {
   for(let r = 0; r < 9; r++)
     for(let c = 0; c < 9; c++)
       if(sudoku[r][c].DOM.firstChild) sudoku[r][c].DOM.firstChild.classList.remove('highlight');
+}
+
+function replayAnim(e) {
+  e.style.animation = 'none';
+  e.offsetHeight;
+  e.style.animation = null;
 }
 
 // Clearing rows, columns and nonets
@@ -671,11 +785,16 @@ function switchLocks(state) {
     removeActive();
     selection = 0;
   }
+
+  if(state) optionLock.classList.add('UIoptionEnabled');
+  else optionLock.classList.remove('UIoptionEnabled');
+  lock = state;
+
   for(let r = 0; r < 9; r++)
     for(let c = 0; c < 9; c++)
       if(sudoku[r][c].value) {
         sudoku[r][c].lock = state;
-        sudoku[r][c].DOM.firstChild.classList.remove('locked', 'unlocked');
+        sudoku[r][c].DOM.firstChild.classList.remove('unlocked');
       }
 }
 
@@ -720,7 +839,7 @@ function checkEnd() {
     }
 
     // If all checks passed present end screen
-    end();
+    setTimeout(() => { end(); }, 200);
   }
 }
 
@@ -742,14 +861,16 @@ function reload(total = false) {
       sudoku[r][c].lock = false;
     }
 
+  optionLock.classList.remove('UIoptionEnabled');
+  optionPencil.classList.remove('UIoptionEnabled');
+  activeClick('option', addonsToggle);
+
   if(total) {
     for(let e of sudoku.DOM.querySelectorAll('td')) {
       e.className = 'cellBorder';
     }
-
     document.getElementsByClassName('restart')[0].remove();
     document.body.classList.remove('end');
-    optionLock.classList.remove('UIoptionEnabled');
     document.body.append(digits, options);
   }
 }
@@ -771,10 +892,7 @@ function end() {
       if(addedStyles.length < 81) {
         addedStyles.push(document.createElement('style')) - 1;
         addedStyles[id].type = 'text/css';
-        addedStyles[id].innerHTML = `
-        .animDelay${id}::before { animation-delay: ${Math.random() * 7}s; }
-        .animDelay${id}::after { animation-delay: ${Math.random() * 7}s; }
-      `;
+        addedStyles[id].innerHTML = `.animDelay${id}::before { animation-delay: ${Math.random() * 7}s; } .animDelay${id}::after { animation-delay: ${Math.random() * 7}s; }`;
         document.head.append(addedStyles[id]);
       }
       e.classList.add(`animDelay${id}`, 'cellBorderAnim');

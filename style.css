@@ -274,7 +274,23 @@ tr:nth-child(3n+2) .cellBorderAnim::before {
 }
 
 /* Options toolbar */
+.UIaddons {
+  position: absolute;
+  bottom: 30px;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  height: 8%;
+  aspect-ratio: 8/1;
+  transition: all 1s;
+}
+
+.UIaddons.expanded {
+  bottom: calc(var(--height)*8/100 + 24px);
+}
+
 .UIoptions {
+  z-index: 10;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -282,6 +298,27 @@ tr:nth-child(3n+2) .cellBorderAnim::before {
   height: 8%;
   aspect-ratio: 8/1;
   margin: 0 50%;
+  background-color: var(--base);
+  border-top: 1px solid var(--base-faded);
+}
+
+.UItoggle {
+  width: 14%;
+  aspect-ratio: 2/1;
+  color: var(--base-faded);
+  border-radius: 200px;
+  text-align: center;
+  font-weight: bold;
+  font-size: large;
+  cursor: pointer;
+  transition: all 0.5s;
+}
+
+.UItoggle:active {
+  transition: all 0s;
+  text-shadow: 0 0 5px var(--accent);
+  box-shadow: 0 0 10px 2px var(--accent);
+  color: var(--accent);
 }
 
 .UIoption {
@@ -330,6 +367,15 @@ tr:nth-child(3n+2) .cellBorderAnim::before {
   color: white;
 }
 
+.end .UIaddons {
+  bottom: -8%;
+  opacity: 0;
+}
+
+.end .UIaddons *:nth-child(2) {
+  display: none;
+}
+
 @keyframes shimmer {
   0% {
     background-color: var(--accent);
@@ -371,4 +417,51 @@ tr:nth-child(3n+2) .cellBorderAnim::before {
 .end.restart {
   transition: all 2s;
   opacity: 1;
+}
+
+.overlay {
+  z-index: 100;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 100%;
+  background-color: #0008;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.dialog {
+  aspect-ratio: 5/2;
+  padding: 10px;
+  background-color: var(--base);
+  text-align: center;
+  color: white;
+  border-radius: 5px;
+}
+
+.dialogText {
+  padding: 20px 10px;
+  text-align: center;
+}
+
+.dialogButton {
+  display: inline-block;
+  width: 80px;
+  height: 30px;
+  padding: 5px;
+  margin: 10px;
+  line-height: 30px;
+  text-align: center;
+  cursor: pointer;
+  background-color: var(--base-faded);
+  border-radius: 5px;
+  transition: background 1s, color 0.4s;
+}
+
+.dialogButton:active {
+  transition: all 0s;
+  background-color: var(--accent);
+  color: var(--base);
 }

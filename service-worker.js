@@ -1,5 +1,5 @@
 // Cache name and resources to cache
-const CACHE_NAME = 'sudoku-v2';
+const CACHE_NAME = 'sudoku-v3';
 const RES = [
   '.',
   '/favicon.ico',
