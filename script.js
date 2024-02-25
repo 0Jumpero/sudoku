@@ -616,8 +616,8 @@ async function generatePuzzle(diff, overlay) {
 
   try {
     let collection = await fetch('https://sudoku-api.vercel.app/api/dosuku?query={newboard(limit:20){grids{value,difficulty}}}').then((res) => res.json()).then((data) => data.newboard.grids);
-    reload();
     for(let grid of collection) if(grid.difficulty == diff) {
+      reload();
       for(let r = 0; r < 9; r++) for(let c = 0; c < 9; c++) {
         if(grid.value[r][c] == 0) continue;
         let digit = document.createElement('div');
@@ -627,7 +627,6 @@ async function generatePuzzle(diff, overlay) {
       }
       switchLocks(true);
       overlay.remove();
-      activeClick('option', addonsToggle);
       return;
     }
     generatePuzzle(diff, overlay);
