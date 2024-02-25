@@ -1,5 +1,5 @@
 /* 
-Next update: timer
+Next update: scoreboard
 */
 
 // Register service worker 
@@ -25,6 +25,11 @@ let lock = false; // lock mode toggled
 let history = []; // move history
 let totals = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]; // counter for each digit inputed
 let addedStyles = []; // additional style classes for end screen
+let timer = { // timer interval handle
+  interval: null,
+  DOM: null,
+  startTime: null
+};
 
 
 // Sudoku Builder
@@ -172,19 +177,18 @@ function activeClick(area, elem) {
     if((selection == 1 && active == elem) || (selection < 2 && currentHighlight == elem.value && elem.lock)) {
       removeActive();
       removeHighlight();
-      active = null;
       selection = 0;
       return;
     }
 
     // Set active cell
     if(selection < 2) {
-      removeActive();
       // Remain highlight if empty cell
       if(selection == 1 && !elem.value && currentHighlight)
         if(active.value == currentHighlight || active.pencil.includes(currentHighlight))
           active.DOM.firstChild.classList.add('highlight');
 
+      removeActive();
       active = elem;
       selection = 1;
 
@@ -319,7 +323,6 @@ function activeClick(area, elem) {
     // Clear active digit
     if(active == elem) {
       removeActive();
-      active = null;
       selection = 0;
       return;
     }
@@ -515,8 +518,14 @@ function activeClick(area, elem) {
     }
 
     if(elem.id == 'lock') {
-      if(lock) switchLocks(false);
-      else switchLocks(true);
+      if(lock) {
+        switchLocks(false);
+        enableTimer(false);
+      }
+      else {
+        switchLocks(true);
+        enableTimer(true);
+      }
       history = [];
     }
 
@@ -626,6 +635,7 @@ async function generatePuzzle(diff, overlay) {
         sudoku[r][c].DOM.firstChild.innerText = sudoku[r][c].value = grid.value[r][c];
       }
       switchLocks(true);
+      enableTimer(true);
       overlay.remove();
       return;
     }
@@ -649,6 +659,8 @@ function removeActive() {
     active.classList.remove('UIdigitEnabled');
     removeHighlight();
   }
+
+  active = null;
 }
 
 function setHighlight(digit) {
@@ -797,10 +809,47 @@ function switchLocks(state) {
       }
 }
 
+// Timer enabling
+function enableTimer(enable) {
+  if(enable) {
+    timer.startTime = new Date();
+    sudoku.DOM.classList.add('timerSpace');
+    // If timer exists
+    if(timer.interval) clearInterval(timer.interval);
+    // If timer doesn't exist
+    else {
+      timer.DOM = document.createElement('div');
+      timer.DOM.className = timer.DOM.id = 'timer';
+      sudoku.DOM.before(timer.DOM);
+    }
+    timer.interval = setInterval(() => updateTimer(), 500);
+  } else {
+    timer.startTime = null;
+    sudoku.DOM.classList.remove('timerSpace');
+    clearInterval(timer.interval);
+    timer.interval = null;
+    if(timer.DOM) timer.DOM.remove();
+    timer.DOM = null;
+  }
+}
+
+// Timer update
+function updateTimer() {
+  let delta = new Date() - timer.startTime;
+  if(delta > 5999000) delta = '99min 59s';
+  else {
+    let min = Math.floor(delta / 1000 / 60);
+    let sec = Math.floor(delta / 1000 - min * 60);
+    delta = (min > 0) ? `${min}min ${sec}s` : `${sec}s`;
+  }
+  timer.DOM.innerText = delta;
+}
+
 // Update keypad digits counters
 function updateCounters() {
   for(let digit of document.querySelectorAll('.UIdigitCount')) {
-    digit.innerText = 9 - totals[digit.parentElement.id];
+    let rem = 9 - totals[digit.parentElement.id];
+    digit.innerText = (rem) ? rem : '';
   }
 }
 
@@ -837,14 +886,14 @@ function checkEnd() {
       if(bingo.length) return;
     }
 
-    // If all checks passed present end screen
+    // If all checks passed stop the timer and present end screen
+    clearInterval(timer.interval);
     setTimeout(() => { end(); }, 200);
   }
 }
 
 function reload(total = false) {
   removeActive();
-  active = null;
   currentDigit = null;
   currentHighlight = null;
   selection = 0;
@@ -872,6 +921,7 @@ function reload(total = false) {
     document.getElementsByClassName('restart')[0].remove();
     document.body.classList.remove('end');
     document.body.append(digits, options);
+    enableTimer(false);
   }
 }
 

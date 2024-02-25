@@ -27,6 +27,30 @@ body {
   border-top: 0px solid var(--base);
 }
 
+/* Timer */
+.timer {
+  width: 100%;
+  color: white;
+  text-align: center;
+  font-size: calc(var(--height) * 2 / 100);
+  line-height: calc(var(--height) * 5 / 100);
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  transition: margin 3.5s;
+  animation: timer-slide 3.5s;
+}
+
+@keyframes timer-slide {
+  0% {
+    margin-top: calc(var(--height) * (-5) / 100);
+  }
+
+  100% {
+    margin-top: 0px;
+  }
+}
+
 /* Sudoku board */
 .sudoku {
   height: 45%;
@@ -34,6 +58,10 @@ body {
   aspect-ratio: 1;
   border-collapse: collapse;
   margin: 10px 50%;
+}
+
+.sudoku.timerSpace {
+  margin-top: calc(var(--height) * 5 / 100);
 }
 
 /* Sudoku cell divider */
@@ -351,6 +379,10 @@ tr:nth-child(3n+2) .cellBorderAnim::before {
 }
 
 /* End styling */
+.end .timer {
+  margin-top: calc(var(--height) * 1 / 20);
+}
+
 .end .sudoku {
   margin-top: calc(var(--height) * 1 / 8);
 }
