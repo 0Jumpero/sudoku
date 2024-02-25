@@ -863,7 +863,8 @@ function reload(total = false) {
 
   optionLock.classList.remove('UIoptionEnabled');
   optionPencil.classList.remove('UIoptionEnabled');
-  activeClick('option', addonsToggle);
+  addons.classList.remove('expanded');
+  addonsToggle.innerText = '△';
 
   if(total) {
     for(let e of sudoku.DOM.querySelectorAll('td')) {
